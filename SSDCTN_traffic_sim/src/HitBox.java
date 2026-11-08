@@ -61,34 +61,31 @@ public class HitBox {
         double otherUpperMostPoint = other.getUpperMostPoint();
         double otherLeftMostPoint = other.getLeftMostPoint();
         double otherRightMostPoint = other.getRightMostPoint();
-        if(direction == 270.0){
-            if(pointAhead.getY() <= otherUpperMostPoint && thisUpperMostPoint > otherLowerMostPoint && ((thisLeftMostPoint > otherLeftMostPoint && thisLeftMostPoint < otherRightMostPoint) || (thisRightMostPont < otherRightMostPoint && thisRightMostPont > otherLeftMostPoint) || (centrePoint.getX() > otherLeftMostPoint && centrePoint.getX() < otherRightMostPoint))){
+        if((int)direction == 270){
+            if(pointAhead.getY() <= otherUpperMostPoint && thisUpperMostPoint >= otherLowerMostPoint && ((thisLeftMostPoint >= otherLeftMostPoint && thisLeftMostPoint <= otherRightMostPoint) || (thisRightMostPont <= otherRightMostPoint && thisRightMostPont >= otherLeftMostPoint) || (centrePoint.getX() >= otherLeftMostPoint && centrePoint.getX() <= otherRightMostPoint))){
                 return true;
             }
         }
 
-        else if(direction == 0.0){
-            if(pointAhead.getX() >= otherLeftMostPoint && thisLeftMostPoint < otherRightMostPoint && ((thisUpperMostPoint > otherLowerMostPoint && thisUpperMostPoint < otherUpperMostPoint) || (thisLowerMostPoint < otherUpperMostPoint && thisLowerMostPoint > otherLowerMostPoint) || (centrePoint.getY() > otherLowerMostPoint && centrePoint.getY() < otherUpperMostPoint))){
-                //System.out.println("left true");
+        else if((int)direction == 0){
+            if(pointAhead.getX() >= otherLeftMostPoint && thisLeftMostPoint <= otherRightMostPoint && ((thisUpperMostPoint >= otherLowerMostPoint && thisUpperMostPoint <= otherUpperMostPoint) || (thisLowerMostPoint <= otherUpperMostPoint && thisLowerMostPoint >= otherLowerMostPoint) || (centrePoint.getY() >= otherLowerMostPoint && centrePoint.getY() <= otherUpperMostPoint))){
                 return true;
             }
         }
 
-        if(direction == 90.0){
-            if(pointAhead.getY() >= otherLowerMostPoint && thisLowerMostPoint < otherUpperMostPoint && ((thisLeftMostPoint > otherLeftMostPoint && thisLeftMostPoint < otherRightMostPoint) || (thisRightMostPont < otherRightMostPoint && thisRightMostPont > otherLeftMostPoint) || (centrePoint.getX() > otherLeftMostPoint && centrePoint.getX() < otherRightMostPoint))){
-                //System.out.println("upper true");
+        if((int)direction == 90){
+            if(pointAhead.getY() >= otherLowerMostPoint && thisLowerMostPoint <= otherUpperMostPoint && ((thisLeftMostPoint >= otherLeftMostPoint && thisLeftMostPoint <= otherRightMostPoint) || (thisRightMostPont <= otherRightMostPoint && thisRightMostPont >= otherLeftMostPoint) || (centrePoint.getX() >= otherLeftMostPoint && centrePoint.getX() <= otherRightMostPoint))){
                 return true;
             }
         }
 
-        else if(direction == 180.0){
-            if(pointAhead.getX() <= otherRightMostPoint && thisRightMostPont > otherLeftMostPoint && ((thisUpperMostPoint > otherLowerMostPoint && thisUpperMostPoint < otherUpperMostPoint) || (thisLowerMostPoint < otherUpperMostPoint && thisLowerMostPoint > otherLowerMostPoint) || (centrePoint.getY() > otherLowerMostPoint && centrePoint.getY() < otherUpperMostPoint))){
-                //System.out.println("right true");
+        else if((int)direction == 180){
+            if(pointAhead.getX() <= otherRightMostPoint && thisRightMostPont >= otherLeftMostPoint && ((thisUpperMostPoint >= otherLowerMostPoint && thisUpperMostPoint <= otherUpperMostPoint) || (thisLowerMostPoint <= otherUpperMostPoint && thisLowerMostPoint >= otherLowerMostPoint) || (centrePoint.getY() >= otherLowerMostPoint && centrePoint.getY() <= otherUpperMostPoint))){
                 return true;
             }
         }
 
-        for(int i  = 0; i < other.getPointArr().size(); i ++){
+        for(int i = 0; i < other.getPointArr().size(); i ++){
             if(pointInHitBox(other.getPointArr().get(i))){
                 return true;
             }
@@ -106,10 +103,8 @@ public class HitBox {
 
     public boolean pointInHitBox(Point p){
         if(direction % 90 != 0){
-            for(int i = 0; i < 4; i++){
-                if(edgeArr.get(i).pointHasPassedEdge(p)){
-                    return true;
-                }
+            if(this.getLeftMostPoint() <= p.getX() && this.getRightMostPoint() >= p.getX() && this.getUpperMostPoint() >= p.getY() && this.getLowerMostPoint() <= p.getY()){
+                return true;
             }
         }
         return false;

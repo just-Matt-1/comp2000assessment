@@ -15,7 +15,7 @@ ID, type, x, y, radius, direction, start angle, adjacent vertices
 19,Turn,0.3825,0.8675,0.1875,right,0,32
 20,Turn,0.375,0.625,1,straight,0,34
 21,Turn,0.3675,0.1175,0.0625,left,0,30
-22,Turn,0.3675,0.3825,0.1875,right,0,24,25,26
+22,Turn,0.3825,0.3825,0.1875,right,0,24,25,26
 23,Turn,0.375,0.125,1,straight,0,31
 24,Turn,0.6325,0.6175,0.0625,left,90,34
 25,Turn,0.3825,0.6325,0.1875,right,90,35

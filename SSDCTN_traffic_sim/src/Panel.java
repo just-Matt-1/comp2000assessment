@@ -35,8 +35,12 @@ class Panel extends JPanel implements KeyListener {
     private long speedCameraRevenue = 0;
     PoliceCar policeCar;
 
+    Graph g;
+
     // panel creates VehicleSpawner, so also passes any invalid config up
     Panel(int w, int h) throws SimulationConfigurationException, Exception {
+
+        
         this.width = w;
         this.height = h;
         this.setPreferredSize(new Dimension(width, height));
@@ -50,8 +54,10 @@ class Panel extends JPanel implements KeyListener {
 
         stats = new Statistics();
 
+        g = new Graph();
+
         // ---------------------- Vehicle Spawn Timers ----------------------
-        vehicleSpawner = new VehicleSpawner(40); // % chance
+        vehicleSpawner = new VehicleSpawner(25, g); // % chance
         Timer vehicleSpawnTimer = new Timer(1390, e -> {        // attempt freq
             // pause spawner when paused for resize 
             if (!pausedForResize) {
@@ -99,6 +105,9 @@ class Panel extends JPanel implements KeyListener {
                 this.repaint();
                 return;
             }
+
+            CollisionDetection.changeTurningVehicleToDiffEntityStore(vehicleSpawner.getVehicleList(), vehicleSpawner.getMapLanes());
+            //CollisionDetection.detectTurningHitboxOverLap();
 
             explosions.removeIf(Explosion::isFinished);
             Vehicle[] collision = CollisionDetection.findCollision(vehicleSpawner.getVehicleList());
@@ -169,8 +178,9 @@ class Panel extends JPanel implements KeyListener {
                     boolean movementBlocked = environmentBlocks.getOrDefault(vehicle, false)
                         || allowedMovement + 0.0001 < desiredMovement;
                     vehicle.setMovementBlocked(movementBlocked);
+                    //CollisionDetection.detectHitboxCollision(vehicleSpawner.getVehicleList());
 
-                    if (allowedMovement > 0) {
+                    if (allowedMovement > 0 && !vehicle.isMovementBlocked()) {
                         vehicle.move(allowedMovement);
                     }
                     vehicle.updateHitBox();
@@ -191,6 +201,19 @@ class Panel extends JPanel implements KeyListener {
                     }
                 }
             }
+
+
+            /*CollisionDetection.detectHitboxCollision(vehicleSpawner.getVehicleList());
+            for(int i = 0; i < vehicleSpawner.getVehicleList().size(); i++){
+                for(int j = 0; j < vehicleSpawner.getVehicleList().get(i).size(); j++){
+                    if(!vehicleSpawner.getVehicleList().get(i).get(j).isMovementBlocked()){
+                        vehicleSpawner.getVehicleList().get(i).get(j).move(3);
+                    }
+                    else{
+                        vehicleSpawner.getVehicleList().get(i).get(j).move(0);
+                    }
+                }
+            }*/
 
             // remove the swallowed vehicle after movement iteration finishes
             if (swallowedVehicle != null) {

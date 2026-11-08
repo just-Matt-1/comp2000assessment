@@ -33,6 +33,9 @@ public abstract class Vehicle extends JComponent {
     VehicleState moveForward;
     VehicleState state;
 
+    //flag to say that is has changed arr
+    private boolean flag = false;
+
     // constructor
     public Vehicle(){
         turnLeft = new TurnLeft(this);
@@ -117,7 +120,7 @@ public abstract class Vehicle extends JComponent {
         //state.move(vehicleRoute.get(1).getTurn());
     }
 
-    /*public void move(double movementVelocity){
+    public void move(double movementVelocity){
         // allow smooth, temporary speed matching without overwriting desired velocity
         //position = Velocity.calPosition(x, y, direction, movementVelocity);
         //x = position.getX();
@@ -127,7 +130,7 @@ public abstract class Vehicle extends JComponent {
         state.move(vehicleRoute.get(0).getTurn(), movementVelocity);
         // keep collision geometry synced when vehicle is repositioned 
         if (hitBox != null) hitBox.updateHitbox(position, direction);
-    }*/
+    }
 
     public void updatePosition() { // centring method
         setBounds(
@@ -143,12 +146,12 @@ public abstract class Vehicle extends JComponent {
     }
 
     // ----------------- Movement -----------------
-    public void move(double movementVelocity){
+    /*public void move(double movementVelocity){
         position = Velocity.calPosition(x, y, direction, movementVelocity);
         x = position.getX();
         y = position.getY();
         updatePosition();
-    }
+    }*/
 
     // For acceleration pass positive number, for deceleration pass negative number
     public void accelerate(double change) {
@@ -208,5 +211,17 @@ public abstract class Vehicle extends JComponent {
 
     public VehicleState getTurnRightState(){
         return turnRight;
+    }
+
+    public VehicleState getState(){
+        return state;
+    }
+
+    public boolean getFlag(){
+        return flag;
+    }
+
+    public void setFlag(boolean flag){
+        this.flag = flag;
     }
 }

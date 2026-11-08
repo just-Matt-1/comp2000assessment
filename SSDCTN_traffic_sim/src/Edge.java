@@ -17,6 +17,7 @@ public class Edge {
         double leftAngleToPoint = Math.atan2(yDiffToPoint, xDiffToPoint);
         boolean inbetweenPoints;
         if((p.getX() > left.getX() && p.getX() < right.getX()) || (p.getX() < left.getX() && p.getX() > right.getX())){
+            System.out.println("inbetween points");
             inbetweenPoints = true;
         }else{
             inbetweenPoints = false;

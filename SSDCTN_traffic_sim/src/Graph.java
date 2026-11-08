@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Random;
+import java.util.Arrays;
 
 
 public class Graph {
@@ -16,6 +17,13 @@ public class Graph {
     private ArrayList<Vertex> finishArr;
     private HashMap<Vertex, Vertex> finishPointUnreachableByStartPoint;
     private Random rand;
+    ArrayList<Integer> preferedFinish0 = new ArrayList<Integer>(Arrays.asList(32,32,32,32,32,32,32,31,31,31,31,31,31,33,34,35));
+    ArrayList<Integer> preferedFinish1 = new ArrayList<Integer>(Arrays.asList(33,33,33,33,33,33,33,32,32,32,32,32,32,30,34,35));
+    ArrayList<Integer> preferedFinish2 = new ArrayList<Integer>(Arrays.asList(30,30,30,30,30,30,30,35,35,35,35,35,35,34,33,31));
+    ArrayList<Integer> preferedFinish3 = new ArrayList<Integer>(Arrays.asList(31,31,31,31,31,31,31,30,30,30,30,30,30,32,34,35));
+    ArrayList<Integer> preferedFinish4 = new ArrayList<Integer>(Arrays.asList(35,35,35,35,35,35,35,32,32,32,32,32,32,30,31,33));
+    ArrayList<Integer> preferedFinish5 = new ArrayList<Integer>(Arrays.asList(34,34,34,34,34,34,34,32,32,32,32,32,32,30,33,31));
+    HashMap<Vertex, ArrayList<Integer>> mapStartToFinishPref = new HashMap<>();
 
     // constructor
     public Graph() throws IOException{
@@ -49,8 +57,11 @@ public class Graph {
             finishArr.add(vertex);
         }
 
+        mapStartToFinishPref = mapStartToFinishWithPreference();
+
         finishPointUnreachableByStartPoint = mapFinishToStart();
         rand = new Random();
+
     }
 
     //maps every start point to their finish point
@@ -60,6 +71,17 @@ public class Graph {
             map.put(startArr.get(i), finishArr.get(i));
         }
         return map;
+    }
+
+    private HashMap<Vertex, ArrayList<Integer>> mapStartToFinishWithPreference(){
+        HashMap<Vertex, ArrayList<Integer>> mapStartToFinishPref = new HashMap<>();
+        mapStartToFinishPref.put(vertexArr.get(0), preferedFinish0);
+        mapStartToFinishPref.put(vertexArr.get(1), preferedFinish1);
+        mapStartToFinishPref.put(vertexArr.get(2), preferedFinish2);
+        mapStartToFinishPref.put(vertexArr.get(3), preferedFinish3);
+        mapStartToFinishPref.put(vertexArr.get(4), preferedFinish4);
+        mapStartToFinishPref.put(vertexArr.get(5), preferedFinish5);
+        return mapStartToFinishPref;
     }
     
 
@@ -129,12 +151,15 @@ public class Graph {
 
     //gives a vehicle a random finish point based in their start point
     public Vertex getRandomFinish(Vertex start){
-        Vertex nonUsableFinishPoint = finishPointUnreachableByStartPoint.get(start);
+        /*Vertex nonUsableFinishPoint = finishPointUnreachableByStartPoint.get(start);
         int random = nonUsableFinishPoint.getID();
         while(random == nonUsableFinishPoint.getID()){
             random = rand.nextInt(30, 36);
         }
-        Vertex finish = getVertex(random);
+        Vertex finish = getVertex(random);*/
+
+        int random = rand.nextInt(0, mapStartToFinishPref.get(start).size());
+        Vertex finish = getVertex(mapStartToFinishPref.get(start).get(random));
         return finish;
     }
 

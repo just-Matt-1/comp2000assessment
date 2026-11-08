@@ -33,7 +33,7 @@ public class Velocity {
         return new Point(newX, newY);
     }
 
-    static public Point calPositionTurningLeft(Turn turn, double direction, double x, double y, int counter){
+    static public Point calPositionTurningLeft(Turn turn, double direction, double x, double y, int counter, int movementVelocity){
         float radius = turn.getRadius();
         direction = direction * Math.PI/180;
         double startAngle = turn.getStartAngle() * Math.PI/180;
@@ -45,7 +45,7 @@ public class Velocity {
         return new Point(xPos, yPos);
     }
 
-    static public Point calPositionTurningRight(Turn turn, double direction, double x, double y, int counter){
+    static public Point calPositionTurningRight(Turn turn, double direction, double x, double y, int counter, int movementVelocity){
         float radius = turn.getRadius();
         direction = direction * Math.PI/180;
         double startAngle = turn.getStartAngle() * Math.PI/180;

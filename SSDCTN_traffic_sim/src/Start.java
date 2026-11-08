@@ -33,4 +33,8 @@ public class Start {
     public Point getStartPoint(){
         return startPoint;
     }
+
+    public void setStartPoint(Point p){
+        startPoint = p;
+    }
 }

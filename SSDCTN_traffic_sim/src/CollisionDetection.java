@@ -2,25 +2,29 @@ import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.*;
 
 public class CollisionDetection {
 
     // stores a rear-end collision detected during movement calculation
     private static Vehicle[] rearEndCollision = null;
+    private static List<Map<Integer, EntityStore<Vehicle>>> turningVehiclesList;
 
     public static Vehicle[] findCollision(List<EntityStore<Vehicle>> vehicleArr) {
-        // t-bone collision requires vehicles from diff lanes travelling at right angles
-        for (int firstLane = 0; firstLane < vehicleArr.size() - 1; firstLane++) {
-            for (int secondLane = firstLane + 1; secondLane < vehicleArr.size(); secondLane++) {
-                for (Vehicle firstVehicle : vehicleArr.get(firstLane).getEntities()) {
-                    for (Vehicle secondVehicle : vehicleArr.get(secondLane).getEntities()) {
-                        if (isPerpendicular(firstVehicle, secondVehicle)
-                                && firstVehicle.getHitBox().overlaps(secondVehicle.getHitBox())) {
-                            // return first crash pair so Panel can create explosion YAY!!!
-                            return new Vehicle[] { firstVehicle, secondVehicle };
-                        }
-                    }
+        // rear-end collisions within one lane are checked
+        List<Vehicle> vehicles = vehicleArr.stream()
+            .flatMap(EntityStore::stream)
+            .collect(Collectors.toList());
+
+        // compare each unique pair
+        for (int firstIndex = 0; firstIndex < vehicles.size() - 1; firstIndex++) {
+            for (int secondIndex = firstIndex + 1; secondIndex < vehicles.size(); secondIndex++) {
+                Vehicle firstVehicle = vehicles.get(firstIndex);
+                Vehicle secondVehicle = vehicles.get(secondIndex);
+                if (firstVehicle.getHitBox().overlaps(secondVehicle.getHitBox())) {
+                    // return first crash pair for explosion
+                    return new Vehicle[] { firstVehicle, secondVehicle };
                 }
             }
         }
@@ -48,12 +52,73 @@ public class CollisionDetection {
         return null;
     }
 
-    private static boolean isPerpendicular(Vehicle firstVehicle, Vehicle secondVehicle) {
-        // perpendicular cardinal directions differ by 90 or 270 degrees #math
-        int directionDifference = Math.abs(
-            (int) Math.round(firstVehicle.getDirection() - secondVehicle.getDirection())
-        );
-        return directionDifference == 90 || directionDifference == 270;
+    public static void detectHitboxCollision(List<EntityStore<Vehicle>> vehicleArr){
+        for(int i = 0; i < vehicleArr.size(); i++){
+            for(int j = 0; j < vehicleArr.get(i).size(); j++){
+                for(int k = 0; k < vehicleArr.size(); k++){
+                    for(int l = 0; l < vehicleArr.get(k).size(); l++){
+                        if(vehicleArr.get(k).get(l).getHitBox().pointInHitBox(vehicleArr.get(i).get(j).getHitBox().getPointAhead())){
+                            vehicleArr.get(i).get(j).setMovementBlocked(true);
+                        }
+                        else{
+                            vehicleArr.get(i).get(j).setMovementBlocked(false);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public static void changeTurningVehicleToDiffEntityStore(List<EntityStore<Vehicle>> vehicleArr, HashMap<EntityStore<Vehicle>, ArrayList<EntityStore<Vehicle>>> mapLanes){
+        turningVehiclesList = new ArrayList<Map<Integer, EntityStore<Vehicle>>>();
+
+        for(int i = 0; i < vehicleArr.size(); i++){
+
+            Map<Integer, EntityStore<Vehicle>> turningVehicles = vehicleArr.get(i).stream().collect(new TurningVehicleCollector<Vehicle>());
+            turningVehiclesList.add(turningVehicles);
+
+            for(int j = 0; j < turningVehicles.get(0).size(); j++){
+                boolean flag = turningVehicles.get(0).get(j).getFlag();
+                if(!flag){
+                    turningVehicles.get(0).get(j).setFlag(true);
+                    moveToCorrectEntityStore(vehicleArr.get(i), turningVehicles.get(0).get(j), mapLanes,0);
+                }
+            }
+            for(int j = 0; j < turningVehicles.get(1).size(); j++){
+                boolean flag = turningVehicles.get(1).get(j).getFlag();
+                if(!flag){
+                    turningVehicles.get(1).get(j).setFlag(true);
+                    moveToCorrectEntityStore(vehicleArr.get(i), turningVehicles.get(1).get(j), mapLanes,1);
+                }
+            }
+        }
+    }
+
+    public static void moveToCorrectEntityStore(EntityStore<Vehicle> arr, Vehicle v, HashMap<EntityStore<Vehicle>, ArrayList<EntityStore<Vehicle>>> mapLanes, int dir){
+        ArrayList<EntityStore<Vehicle>> potentialNewLanes = mapLanes.get(arr);
+        if((dir == 0 && potentialNewLanes.size() == 2) || (dir == 0 && potentialNewLanes.size() == 4 && v.getPosition().getY() < App.height*0.5)){
+            potentialNewLanes.get(0).add(v);
+            arr.remove(v);
+        }else if((dir == 1 && potentialNewLanes.size() == 2) || (dir == 1 && potentialNewLanes.size() == 4 && v.getPosition().getY() < App.height*0.5)){
+            potentialNewLanes.get(1).add(v);
+            arr.remove(v);
+        }else if(dir == 0 && potentialNewLanes.size() == 4){
+            if(v.getPosition().getY() > App.height*0.5){
+                potentialNewLanes.get(2).add(v);
+            }
+            else{
+                potentialNewLanes.get(3).add(v);
+            }
+            arr.remove(v);
+        }else if(dir == 1 && potentialNewLanes.size() == 4){
+            if(v.getPosition().getY() > App.height*0.5){
+                potentialNewLanes.get(3).add(v);
+            }
+            else{
+                potentialNewLanes.get(2).add(v);
+            }
+            arr.remove(v);
+        }
     }
 
     public static Map<Vehicle, Double> calculateAllowedMovements(

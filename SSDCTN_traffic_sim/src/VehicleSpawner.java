@@ -3,19 +3,19 @@ import java.util.stream.Stream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.HashMap;
 
 public class VehicleSpawner {
     // Frame dimensions
     private int width, height;
 
     // spawn points
-    private Point NORTH_SP;
-    private Point EAST_SP;
-    private Point SOUTH_SP;
-    private Point WEST_SP;
-    private Point EASTTOO_SP;
-    private Point WESTTOO_SP;
-    private final Point TEST_SP;
+    private Start NORTH_SP;
+    private Start EAST_SP;
+    private Start SOUTH_SP;
+    private Start WEST_SP;
+    private Start EASTTOO_SP;
+    private Start WESTTOO_SP;
 
     // directions of travel
     private final float NORTH = 270;
@@ -46,8 +46,27 @@ public class VehicleSpawner {
     // List active vehicles with sublists based on spawn point (now uses EntityStore to reject unrelated object types at compile time (generics yay!))
     private List<EntityStore<Vehicle>> activeVehicles;
     private EntityStore<Vehicle> northSpawn, eastSpawn, southSpawn, westSpawn, eastTooSpawn, westTooSpawn;
+    private HashMap<EntityStore<Vehicle>, ArrayList<EntityStore<Vehicle>>> mapLanes;
 
-    VehicleSpawner(int spawnChance) throws SimulationConfigurationException {
+    ArrayList<EntityStore<Vehicle>> northArr;
+    ArrayList<EntityStore<Vehicle>> eastArr;
+    ArrayList<EntityStore<Vehicle>> southArr;
+    ArrayList<EntityStore<Vehicle>> westArr;
+    ArrayList<EntityStore<Vehicle>> eastTooArr;
+    ArrayList<EntityStore<Vehicle>> westTooArr;
+
+    //graphing
+    private Graph localGraph;
+
+    VehicleSpawner(int spawnChance, Graph g) throws SimulationConfigurationException {
+
+        NORTH_SP = g.getVertex(0).getStart();
+        EAST_SP = g.getVertex(1).getStart();
+        SOUTH_SP = g.getVertex(2).getStart();
+        WEST_SP = g.getVertex(3).getStart();
+        EASTTOO_SP = g.getVertex(4).getStart();
+        WESTTOO_SP = g.getVertex(5).getStart();
+
         if (spawnChance < 0 || spawnChance > 100) {
             throw new SimulationConfigurationException("Spawn chance must be between 0 and 100.");
         }
@@ -58,9 +77,6 @@ public class VehicleSpawner {
         
         // initialise viewport and spawn points to original panel bounds 
         updateViewportBounds(0, 0, width, height);
-
-        TEST_SP = new Point(0,0);    // test spawn point
-
         assignDimensions();
         rand = new Random();
 
@@ -78,19 +94,35 @@ public class VehicleSpawner {
         activeVehicles.add(westSpawn);
         activeVehicles.add(eastTooSpawn);
         activeVehicles.add(westTooSpawn);
+
+        mapLanes = new HashMap<EntityStore<Vehicle>, ArrayList<EntityStore<Vehicle>>>();
+        northArr = new ArrayList<>(List.of(westSpawn, eastSpawn, westTooSpawn, eastTooSpawn));
+        eastArr = new ArrayList<>(List.of(northSpawn, southSpawn));
+        southArr = new ArrayList<>(List.of(eastSpawn, westSpawn, eastTooSpawn, westTooSpawn));
+        westArr = new ArrayList<>(List.of(southSpawn, northSpawn));
+        eastTooArr = new ArrayList<>(List.of(northSpawn, southSpawn));
+        westTooArr = new ArrayList<>(List.of(southSpawn, northSpawn));
+        mapLanes.put(northSpawn, northArr);
+        mapLanes.put(eastSpawn, eastArr);
+        mapLanes.put(southSpawn, southArr);
+        mapLanes.put(westSpawn, westArr);
+        mapLanes.put(eastTooSpawn, eastTooArr);
+        mapLanes.put(westTooSpawn, westTooArr);
+
+        localGraph = g;
     }
 
 
     public void spawn() {
-        if (rand.nextInt(100) < spawnChance) spawnHelper(NORTH_SP, SOUTH, 0);
-        if (rand.nextInt(100) < spawnChance) spawnHelper(EAST_SP, WEST, 1);
-        if (rand.nextInt(100) < spawnChance) spawnHelper(SOUTH_SP, NORTH, 2);
-        if (rand.nextInt(100) < spawnChance) spawnHelper(WEST_SP, EAST, 3);
-        if (rand.nextInt(100) < spawnChance) spawnHelper(EASTTOO_SP, WEST, 4);
-        if (rand.nextInt(100) < spawnChance) spawnHelper(WESTTOO_SP, EAST, 5);
+        if (rand.nextInt(100) < spawnChance && activeVehicles.get(0).size() < 2) spawnHelper(NORTH_SP, SOUTH, 0);
+        if (rand.nextInt(100) < spawnChance && activeVehicles.get(1).size() < 2) spawnHelper(EAST_SP, WEST, 1);
+        if (rand.nextInt(100) < spawnChance && activeVehicles.get(2).size() < 2) spawnHelper(SOUTH_SP, NORTH, 2);
+        if (rand.nextInt(100) < spawnChance && activeVehicles.get(3).size() < 2) spawnHelper(WEST_SP, EAST, 3);
+        if (rand.nextInt(100) < spawnChance && activeVehicles.get(4).size() < 2) spawnHelper(EASTTOO_SP, WEST, 4);
+        if (rand.nextInt(100) < spawnChance && activeVehicles.get(5).size() < 2) spawnHelper(WESTTOO_SP, EAST, 5);
     }
 
-    private void spawnHelper(Point spawnPoint, float direction, int sublistIndex) {
+    private void spawnHelper(Start spawnPoint, float direction, int sublistIndex) {
         int vehicleType = rand.nextInt(VCL_TYPE_AMOUNT);
             
         // prevents spawning when a vehicle is already in spawn zone
@@ -101,29 +133,36 @@ public class VehicleSpawner {
             totalVehiclesSpawned++;
         }
 
+        Vertex finish = localGraph.getRandomFinish(localGraph.getVertex(spawnPoint.getID()));
+
         switch (vehicleType) {
             case 0: // BUS
-                Bus bus = new Bus(spawnPoint, BUS_W, BUS_H, direction);
+                Bus bus = new Bus(spawnPoint.getStartPoint(), BUS_W, BUS_H, direction);
+                bus.createRoute(spawnPoint.getID(), finish.getID(), localGraph);
                 activeVehicles.get(sublistIndex).add(bus);
                 break;
             
             case 1: // CAR
-                Car car = new Car(spawnPoint, CAR_W, CAR_H, direction);
+                Car car = new Car(spawnPoint.getStartPoint(), CAR_W, CAR_H, direction);
+                car.createRoute(spawnPoint.getID(), finish.getID(), localGraph);
                 activeVehicles.get(sublistIndex).add(car);
                 break;
 
             case 2:  // CYCLIST
-                Cyclist cyclist = new Cyclist(spawnPoint, CYCLIST_W, CYCLIST_H, direction);
+                Cyclist cyclist = new Cyclist(spawnPoint.getStartPoint(), CYCLIST_W, CYCLIST_H, direction);
+                cyclist.createRoute(spawnPoint.getID(), finish.getID(), localGraph);
                 activeVehicles.get(sublistIndex).add(cyclist);
                 break;
             
             case 3: // MOTORBIKE
-                Motorbike motorbike = new Motorbike(spawnPoint, MOTORBIKE_W, MOTORBIKE_H, direction);
+                Motorbike motorbike = new Motorbike(spawnPoint.getStartPoint(), MOTORBIKE_W, MOTORBIKE_H, direction);
+                motorbike.createRoute(spawnPoint.getID(), finish.getID(), localGraph);
                 activeVehicles.get(sublistIndex).add(motorbike);
                 break;
 
             case 4: // TRUCK
-                Truck truck = new Truck(spawnPoint, TRUCK_W, TRUCK_H, direction);
+                Truck truck = new Truck(spawnPoint.getStartPoint(), TRUCK_W, TRUCK_H, direction);
+                truck.createRoute(spawnPoint.getID(), finish.getID(), localGraph);
                 activeVehicles.get(sublistIndex).add(truck);
                 break;
             
@@ -189,12 +228,12 @@ public class VehicleSpawner {
         viewportBottom = bottom;
 
         // replace points so active vehicles never share a moving spawn coord
-        NORTH_SP = new Point(width * 0.57, viewportTop - SPAWN_BUFFER);
-        EAST_SP = new Point(viewportRight + SPAWN_BUFFER, height * 0.32);
-        EASTTOO_SP = new Point(viewportRight + SPAWN_BUFFER, height*0.82);
-        SOUTH_SP = new Point(width * 0.43, viewportBottom + SPAWN_BUFFER);
-        WEST_SP = new Point(viewportLeft - SPAWN_BUFFER, height * 0.18);
-        WESTTOO_SP = new Point(viewportLeft - SPAWN_BUFFER, height*0.68);
+        NORTH_SP.setStartPoint(new Point(width * 0.57, viewportTop - SPAWN_BUFFER));
+        EAST_SP.setStartPoint(new Point(viewportRight + SPAWN_BUFFER, height * 0.32));
+        EASTTOO_SP.setStartPoint(new Point(viewportRight + SPAWN_BUFFER, height*0.82));
+        SOUTH_SP.setStartPoint(new Point(width * 0.43, viewportBottom + SPAWN_BUFFER));
+        WEST_SP.setStartPoint(new Point(viewportLeft - SPAWN_BUFFER, height * 0.18));
+        WESTTOO_SP.setStartPoint(new Point(viewportLeft - SPAWN_BUFFER, height*0.68));
     }
 
 
@@ -216,5 +255,9 @@ public class VehicleSpawner {
 
     public long getTotalVehicleCount() {
         return totalVehiclesSpawned;
+    }
+
+    public HashMap<EntityStore<Vehicle>, ArrayList<EntityStore<Vehicle>>> getMapLanes(){
+        return mapLanes;
     }
 }

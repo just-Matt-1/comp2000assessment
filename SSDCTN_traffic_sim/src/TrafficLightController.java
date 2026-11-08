@@ -4,9 +4,14 @@ import java.util.List;
 
 public class TrafficLightController {
 
-    // each group receives the same update when its traffic direction changes
     private final List<TrafficLightObserver> northSouthLights = new ArrayList<>();
     private final List<TrafficLightObserver> eastWestLights = new ArrayList<>();
+
+    // one group per direction - each direction gets its own green so turning cars
+    // never have oncoming traffic (order: south, west, north, east)
+
+    private final List<List<TrafficLightObserver>> directions = new ArrayList<>();
+    private int currentDirection = 0;
 
     private Timer timer;
     private int trafficPhase = 0;
@@ -20,7 +25,7 @@ public class TrafficLightController {
     private final int YELLOW = 1;
     private final int RED = 2;
 
-    private final int GREEN_TIME = 20000; // 20 seconds I think these times work best, other times glitch out
+    private final int GREEN_TIME = 10000; // 20 seconds I think these times work best, other times glitch out
     private final int YELLOW_TIME = 4500; // 4 seconds
 
     public TrafficLightController(
@@ -47,6 +52,22 @@ public class TrafficLightController {
         // Initial states – starts with vertical traffic flow
         notifyObservers(eastWestLights, RED);
         notifyObservers(northSouthLights, GREEN);
+        // register the active lights as observers, one direction each
+        directions.add(List.of(trafficLight2));   // southbound
+        directions.add(List.of(trafficLight4));   // westbound
+        directions.add(List.of(trafficLight3));   // northbound
+        directions.add(List.of(trafficLight1));   // eastbound
+
+        // Starting state - everything red except the first direction
+        for (List<TrafficLightObserver> lights : directions) {
+            notifyObservers(lights, RED);
+        }
+        notifyObservers(directions.get(currentDirection), GREEN);
+
+        //trafficLight5.setLightState(RED); 
+        //trafficLight8.setLightState(RED);
+        //trafficLight6.setLightState(GREEN);
+        //trafficLight7.setLightState(GREEN);
 
         timer = new Timer(GREEN_TIME, e -> changePhase());
 
@@ -83,51 +104,20 @@ public class TrafficLightController {
         // System.out.println("TrafficLightController.changePhase() called");
         switch (trafficPhase) {
 
-            // North/South GREEN -> YELLOW
+            // current direction GREEN -> YELLOW (everyone else is still red)
             case 0:
-                notifyObservers(northSouthLights, YELLOW);
-                notifyObservers(eastWestLights, RED);
-
+                notifyObservers(directions.get(currentDirection), YELLOW);
                 trafficPhase = 1;
-
                 startTimer(YELLOW_TIME);
-
                 break;
 
-
-            // North/South RED -> East/West GREEN
+            // current direction RED -> next direction GREEN
             case 1:
-                notifyObservers(northSouthLights, RED);
-                notifyObservers(eastWestLights, GREEN);
-
-                trafficPhase = 2;
-
-                startTimer(GREEN_TIME);
-
-                break;
-
-
-            // East/West GREEN -> YELLOW
-            case 2:
-                notifyObservers(eastWestLights, YELLOW);
-                notifyObservers(northSouthLights, RED);
-
-                trafficPhase = 3;
-
-                startTimer(YELLOW_TIME);
-
-                break;
-
-
-            // East/West RED -> North/South GREEN
-            case 3:
-                notifyObservers(eastWestLights, RED);
-                notifyObservers(northSouthLights, GREEN);
-
+                notifyObservers(directions.get(currentDirection), RED);
+                currentDirection = (currentDirection + 1) % directions.size();
+                notifyObservers(directions.get(currentDirection), GREEN);
                 trafficPhase = 0;
-
                 startTimer(GREEN_TIME);
-
                 break;
         }
     }

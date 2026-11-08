@@ -18,6 +18,16 @@ public class EntityStore<T extends Vehicle> {
         entities.add(entity);
     }
 
+    public static void addAll(EntityStore<Vehicle> arr1, EntityStore<Vehicle> arr2){
+        for(int i = 0; i < arr2.size(); i++){
+            arr1.add(arr2.get(i));
+        }
+    }
+
+    public int size(){
+        return entities.size();
+    }
+
     public void remove(T entity) {
         if (entity == null) {
             // fail at point of mistake instead of when Panel is trying to draw

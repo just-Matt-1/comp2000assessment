@@ -10,7 +10,7 @@ public class CollisionDetectionTest {
         testFollowingVehicleStopsForStationaryLeader();
         testSeparatedVehiclesContinue();
         testTboneCollisionIsDetected();
-        testSameDirectionVehiclesDoNotExplode();
+        testRearEndCollisionIsDetected();
         testMotorbikeHitboxBufferIsRespected();
         testMovementIsLimitedToSafeFollowingDistance();
         System.out.println("Collision detection tests passed.");
@@ -50,16 +50,16 @@ public class CollisionDetectionTest {
             "Overlapping perpendicular vehicles should create a collision.");
     }
 
-    private static void testSameDirectionVehiclesDoNotExplode() {
-        // rear-end handling is separate from the t-bone explosion feature
+    private static void testRearEndCollisionIsDetected() {
         Car firstVehicle = createCar(100, 100, 90);
         Car secondVehicle = createCar(100, 100, 90);
 
+        // keep both vehicles in one lane
         Vehicle[] collision = CollisionDetection.findCollision(
-            List.of(createLane(firstVehicle), createLane(secondVehicle))
+            List.of(createLane(firstVehicle, secondVehicle))
         );
-        require(collision == null,
-            "Same-direction vehicles should not create a T-bone collision.");
+        require(collision != null,
+            "Overlapping same-direction vehicles should create a rear-end collision.");
     }
 
     private static void testMotorbikeHitboxBufferIsRespected() {

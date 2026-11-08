@@ -5,14 +5,6 @@ public class MoveForward implements VehicleState{
         this.vehicle = vehicle;
     }
 
-    public void detectStraight(){
-        return;
-    }
-
-    public void detectTurn(){
-        return;
-    }
-
     public void move(Turn turn, double movementVelocity){
         vehicle.position = Velocity.calPosition(vehicle.x, vehicle.y, vehicle.direction, movementVelocity);
         vehicle.x = vehicle.position.getX();
