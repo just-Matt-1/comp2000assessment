@@ -173,7 +173,8 @@ public class VehicleSpawner {
                 : new IgnoreTrafficLight();
                 
                 // Create a speeding car with the selected strategy.
-                SpeedingCar speedingCar = new SpeedingCar(spawnPoint, CAR_W, CAR_H, direction, strategy);
+                SpeedingCar speedingCar = new SpeedingCar(spawnPoint.getStartPoint(), CAR_W, CAR_H, direction, strategy);
+                speedingCar.createRoute(spawnPoint.getID(), finish.getID(), localGraph);
                 activeVehicles.get(sublistIndex).add(speedingCar);
                 break;
 
